@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'my-defined-label' }
+    agent { label 'jdk11-mvn3.8.4' }
     triggers {
         upstream(upstreamProjects: 'java-11', threshold: hudson.model.Result.SUCCESS)
         cron('30 */1 * * 1-5')
@@ -31,12 +31,12 @@ pipeline {
         }
         stage('publish test result') {
             steps {
-                junit 'target/surefire-reports/*.xml'
+                junit '**/TEST-*.xml'
             }
         }
         stage("build & SonarQube analysis") {
             steps {
-                withSonarQubeEnv('My SonarQube Server') {
+                withSonarQubeEnv(installationName:'SONAR_9.2.1') {
                     sh 'mvn clean package sonar:sonar'
                 }
             }
@@ -53,8 +53,8 @@ pipeline {
                 rtMavenDeployer (
                     id:'MAVEN_DEPLOYER',
                     serverId:'JFROG-OSS',
-                    releaseRepo:'qt-maven-release',
-                    snapshotRepo:'qt-maven-snapshot'
+                    releaseRepo:'qt-maven-releases',
+                    snapshotRepo:'qt-maven-snapshots'
                 )
             }
         }
