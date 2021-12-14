@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'jdk11-mvn3.8.4' }
+    agent { label 'my-defined-label' }
     triggers {
         upstream(upstreamProjects: 'java-11', threshold: hudson.model.Result.SUCCESS)
         cron('30 */1 * * 1-5')
@@ -29,50 +29,51 @@ pipeline {
                 archive 'target/*.jar'
             }
         }
-        stage('publish test results') {
+        stage('publish test result') {
             steps {
                 junit 'target/surefire-reports/*.xml'
             }
         }
-        stage('build & SonarQube analysis') {
+        stage("build & SonarQube analysis") {
             steps {
                 withSonarQubeEnv('My SonarQube Server') {
                     sh 'mvn clean package sonar:sonar'
                 }
             }
         }
-        stage('Quality Gate') {
+        stage("Quality Gate") {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
-        stage('Artifactory configuration') {
+        stage ('Artifactory configuration') {
             steps {
                 rtMavenDeployer (
                     id:'MAVEN_DEPLOYER',
                     serverId:'JFROG-OSS',
-                    rleaseRepo:'qt-maven-releases',
+                    releasesRepo:'qt-maven-release',
                     snapshotRepo:'qt-maven-snapshot'
                 )
             }
         }
-        stage('Exec maven') {
+        stage ('Exec Maven') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'JFROG_ARTIFACTORY', usernameVariable: 'ARTIFACTORY_USERNAME', passwordVariable: 'ARTIFACTORY_PASSWORD')]) {
                     rtMavenRun (
                         tool:'MVN_3.8.4',
                         pom:'pom.xml',
                         goals:'clean install',
-                        depolyerId:'MAVEN_DEPLOYER'
+                        deployerId:'MAVEN_DEPLOYER'
+                    )
                 }
             }
         }
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (
-                    serverId: 'JFROG-OSS'
+                    serverId:'JFROG-OSS'
                 )
             }
         }
@@ -81,8 +82,8 @@ pipeline {
         always {
             mail from: "abbaigarimanavadu77@gmail.com",
                 to: "nagarajucivil011@gmail.com",
-                subject: "Status of the pipeline : ${currentBuild.fullDisplayName}",
-                body: "${env.BUILD_URL} has the result ${currentBuild.result}"
+                subject: "status of the pipeline : ${currentBuild.fullDisplayName}",
+                body: "${env.BUILD_URL} has the rsult ${currentBuild.result}"
         }
     }
 }
