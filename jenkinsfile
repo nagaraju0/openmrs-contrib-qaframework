@@ -53,7 +53,7 @@ pipeline {
                 rtMavenDeployer (
                     id:'MAVEN_DEPLOYER',
                     serverId:'JFROG-OSS',
-                    releasesRepo:'qt-maven-release',
+                    releaseRepo:'qt-maven-release',
                     snapshotRepo:'qt-maven-snapshot'
                 )
             }
